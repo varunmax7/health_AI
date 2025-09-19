@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Symptom Tracker</title>
+    <style>
+        body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #e0f7fa, #f1f8ff);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        h1 {
+            color: #0077cc;
+            margin-bottom: 30px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            background: #e3f2fd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 1.05em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        a {
+            display: inline-block;
+            margin-top: 30px;
+            text-decoration: none;
+            background: linear-gradient(135deg, #00bcd4, #2196f3);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+        }
+        a:hover {
+            background: linear-gradient(135deg, #2196f3, #00bcd4);
+            transform: scale(1.05);
+        }
+        .empty {
+            font-style: italic;
+            color: #555;
+        }
+        .advice {
+            margin-top: 30px;
+            background: #f1f8ff;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            color: #333;
+            text-align: left;
+        }
+        .advice h3 {
+            margin-bottom: 10px;
+            color: #0077cc;
+            text-align: center;
+        }
+        .advice-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ccc;
+        }
+        .advice-item:last-child {
+            border-bottom: none;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .symptom-info {
+            flex-grow: 1;
+        }
+        .symptom-count {
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .warning {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>📈 Symptom Trends</h1>
+
+    {% if trends %}
+        <ul>
+        {% for symptom, count in trends.items() %}
+            <li>
+                <div class="symptom-info">
+                    <strong>{{ symptom.title() }}</strong>
+                    <span class="symptom-count">{{ count }} time{% if count > 1 %}s{% endif %}</span>
+                </div>
+                <form action="{{ url_for('delete_symptom', symptom=symptom) }}" method="POST">
+                    <button type="submit" class="delete-btn">Delete</button>
+                </form>
+            </li>
+        {% endfor %}
+        </ul>
+
+        <div class="advice">
+            <h3>🔍 Consultation Alerts & Advice</h3>
+
+            {% if trends.get('fever', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Fever ({{ trends.get('fever', 0) }} occurrences):</strong>
+                {% if trends.get('fever', 0) > 3 %}<span class="warning">(Severe)</span>{% endif %}
+                <p>Monitor your temperature regularly. Persistent fever could indicate infection. Stay hydrated and rest. If fever exceeds 102°F (39°C) or lasts more than 3 days, consult a General Physician.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('sore throat', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Sore Throat ({{ trends.get('sore throat', 0) }} occurrences):</strong>
+                <p>Recurrent sore throat may indicate chronic infection or allergies. Gargle with warm salt water regularly. If pain persists beyond 5 days or is severe, see an ENT Specialist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('cough', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Cough ({{ trends.get('cough', 0) }} occurrences):</strong>
+                {% if trends.get('cough', 0) > 3 %}<span class="warning">(Severe)</span>{% endif %}
+                <p>Persistent cough could indicate respiratory issues. Try steam inhalation. If coughing up blood or lasting more than 3 weeks, consult a Pulmonologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('headache', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Headache ({{ trends.get('headache', 0) }} occurrences):</strong>
+                {% if trends.get('headache', 0) > 3 %}<span class="warning">(Severe)</span>{% endif %}
+                <p>Frequent headaches may indicate migraines or tension. Maintain regular sleep patterns. If headaches are severe or accompanied by vision changes, see a Neurologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('fatigue', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Fatigue ({{ trends.get('fatigue', 0) }} occurrences):</strong>
+                <p>Chronic fatigue could indicate anemia or thyroid issues. Ensure adequate sleep and nutrition. If fatigue persists despite rest, consult a General Physician for blood tests.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('cold', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Cold ({{ trends.get('cold', 0) }} occurrences):</strong>
+                <p>Frequent colds may indicate weakened immunity. Boost vitamin C intake. If symptoms last more than 10 days or include high fever, see a General Physician.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('body aches', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Body Aches ({{ trends.get('body aches', 0) }} occurrences):</strong>
+                <p>Persistent body aches could indicate viral infection or fibromyalgia. Try warm baths and gentle stretching. If accompanied by fever or lasting more than a week, consult a doctor.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('runny nose', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Runny Nose ({{ trends.get('runny nose', 0) }} occurrences):</strong>
+                <p>Chronic runny nose may indicate allergies. Try antihistamines. If discharge is colored or persists beyond 10 days, see an ENT Specialist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('chills', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Chills ({{ trends.get('chills', 0) }} occurrences):</strong>
+                <p>Frequent chills often accompany infection. Monitor for fever. If chills are severe or recurrent without fever, consult a General Physician.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('nausea', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Nausea ({{ trends.get('nausea', 0) }} occurrences):</strong>
+                <p>Recurrent nausea may indicate gastric issues. Try ginger tea. If accompanied by vomiting or weight loss, see a Gastroenterologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('vomiting', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Vomiting ({{ trends.get('vomiting', 0) }} occurrences):</strong>
+                {% if trends.get('vomiting', 0) > 1 %}<span class="warning">(Severe)</span>{% endif %}
+                <p>Persistent vomiting can lead to dehydration. Sip clear fluids. If vomiting lasts more than 24 hours or contains blood, seek medical attention immediately.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('diarrhea', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Diarrhea ({{ trends.get('diarrhea', 0) }} occurrences):</strong>
+                {% if trends.get('diarrhea', 0) > 1 %}<span class="warning">(Severe)</span>{% endif %}
+                <p>Stay hydrated with electrolyte solutions. If diarrhea lasts more than 2 days or contains blood, consult a Gastroenterologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('constipation', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Constipation ({{ trends.get('constipation', 0) }} occurrences):</strong>
+                <p>Increase fiber and water intake. If constipation persists beyond a week or is painful, see a Gastroenterologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('dizziness', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Dizziness ({{ trends.get('dizziness', 0) }} occurrences):</strong>
+                {% if trends.get('dizziness', 0) > 2 %}<span class="warning">(Severe)</span>{% endif %}
+                <p>Recurrent dizziness may indicate inner ear problems or low blood pressure. Avoid sudden movements. If accompanied by fainting, consult a Neurologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('shortness of breath', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Shortness of Breath ({{ trends.get('shortness of breath', 0) }} occurrences):</strong>
+                <span class="warning">(Serious)</span>
+                <p>Seek immediate medical attention if severe. Could indicate asthma or heart issues. Try slow, deep breathing exercises in the meantime.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('chest pain', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Chest Pain ({{ trends.get('chest pain', 0) }} occurrences):</strong>
+                <span class="warning">(Emergency)</span>
+                <p>Chest pain requires immediate medical evaluation, especially if radiating to arm or jaw. Could indicate heart problems - don't delay seeking help.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('joint pain', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Joint Pain ({{ trends.get('joint pain', 0) }} occurrences):</strong>
+                <p>Persistent joint pain may indicate arthritis. Apply ice to swollen joints. If pain limits movement or persists, see an Orthopedic Specialist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('swelling', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Swelling ({{ trends.get('swelling', 0) }} occurrences):</strong>
+                <p>Unexplained swelling could indicate circulation problems. Elevate affected areas. If swelling is sudden or painful, consult a doctor.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('rash', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Rash ({{ trends.get('rash', 0) }} occurrences):</strong>
+                <p>Avoid scratching. Use anti-itch creams. If rash spreads rapidly or is accompanied by fever, see a Dermatologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('itchy skin', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Itchy Skin ({{ trends.get('itchy skin', 0) }} occurrences):</strong>
+                <p>Chronic itching may indicate allergies or skin conditions. Moisturize regularly. If persistent or widespread, consult a Dermatologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('abdominal pain', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Abdominal Pain ({{ trends.get('abdominal pain', 0) }} occurrences):</strong>
+                {% if trends.get('abdominal pain', 0) > 2 %}<span class="warning">(Severe)</span>{% endif %}
+                <p>Persistent abdominal pain requires evaluation. If pain is severe or localized to lower right side (possible appendicitis), seek immediate care.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('leg cramps', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Leg Cramps ({{ trends.get('leg cramps', 0) }} occurrences):</strong>
+                <p>Frequent cramps may indicate electrolyte imbalance. Stay hydrated and stretch gently. If cramps are severe or frequent at night, consult a doctor.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('back pain', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Back Pain ({{ trends.get('back pain', 0) }} occurrences):</strong>
+                <p>Practice good posture and gentle stretching. If pain radiates down legs or causes numbness, see an Orthopedic Specialist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('numbness', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Numbness ({{ trends.get('numbness', 0) }} occurrences):</strong>
+                <span class="warning">(Concerning)</span>
+                <p>Persistent numbness, especially if one-sided, requires neurological evaluation. Avoid pressure on affected area and consult a Neurologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('blurry vision', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Blurry Vision ({{ trends.get('blurry vision', 0) }} occurrences):</strong>
+                <span class="warning">(Important)</span>
+                <p>Sudden vision changes require prompt attention. Rest your eyes and schedule an appointment with an Ophthalmologist if persistent.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('ringing in ears', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Ringing in Ears ({{ trends.get('ringing in ears', 0) }} occurrences):</strong>
+                <p>Chronic tinnitus may indicate hearing damage. Avoid loud noises. If ringing is persistent or one-sided, see an ENT Specialist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('insomnia', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Insomnia ({{ trends.get('insomnia', 0) }} occurrences):</strong>
+                <p>Establish a regular sleep routine. Limit caffeine and screen time before bed. If sleep problems persist, consider consulting a Sleep Specialist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('dry mouth', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Dry Mouth ({{ trends.get('dry mouth', 0) }} occurrences):</strong>
+                <p>Could indicate dehydration or diabetes. Stay hydrated and monitor for other symptoms like frequent urination. Consult a doctor if persistent.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('canker sores', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Canker Sores ({{ trends.get('canker sores', 0) }} occurrences):</strong>
+                <p>Avoid acidic foods. Use soothing mouth rinses. If sores are large, numerous, or persistent beyond 2 weeks, see a Dentist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('bloody nose', 0) >= 2 or trends.get('nosebleeds', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Nosebleeds ({{ trends.get('bloody nose', 0) + trends.get('nosebleeds', 0) }} occurrences):</strong>
+                <p>Frequent nosebleeds may indicate dryness or blood pressure issues. Use a humidifier. If bleeding is heavy or prolonged, consult an ENT Specialist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('pale skin', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Pale Skin ({{ trends.get('pale skin', 0) }} occurrences):</strong>
+                <p>Could indicate anemia. Ensure iron-rich diet. If accompanied by fatigue or shortness of breath, consult a General Physician for blood tests.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('weight loss', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Weight Loss ({{ trends.get('weight loss', 0) }} occurrences):</strong>
+                <p>Unexplained weight loss requires medical evaluation. Could indicate metabolic issues. Maintain a food diary and consult an Endocrinologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('weight gain', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Weight Gain ({{ trends.get('weight gain', 0) }} occurrences):</strong>
+                <p>Sudden weight gain may indicate hormonal issues. Monitor diet and activity. If unexplained, consult an Endocrinologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('anxiety', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Anxiety ({{ trends.get('anxiety', 0) }} occurrences):</strong>
+                <p>Practice relaxation techniques. If anxiety interferes with daily life or causes physical symptoms, consider consulting a Psychiatrist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('depression', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Depression ({{ trends.get('depression', 0) }} occurrences):</strong>
+                <p>Maintain a routine and stay active. If feelings persist or worsen, seek professional help from a Psychiatrist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('food poisoning', 0) >= 1 %}
+            <div class="advice-item">
+                <strong>Food Poisoning ({{ trends.get('food poisoning', 0) }} occurrences):</strong>
+                <span class="warning">(Concerning)</span>
+                <p>Stay hydrated with small sips of water. If symptoms are severe or include bloody diarrhea, seek medical care immediately.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('stomachache', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Stomachache ({{ trends.get('stomachache', 0) }} occurrences):</strong>
+                <p>Avoid heavy meals. Use heat pads for comfort. If pain is severe or localized, consult a Gastroenterologist.</p>
+            </div>
+            {% endif %}
+
+            {% if trends.get('period cramps', 0) >= 2 %}
+            <div class="advice-item">
+                <strong>Period Cramps ({{ trends.get('period cramps', 0) }} occurrences):</strong>
+                {% if trends.get('period cramps', 0) > 3 %}<span class="warning">(Severe)</span>{% endif %}
+                <p>Use heat therapy and gentle exercise. If cramps are debilitating or accompanied by heavy bleeding, consult a Gynecologist.</p>
+            </div>
+            {% endif %}
+
+        </div>
+    {% else %}
+        <p class="empty">No symptoms tracked yet. Start tracking your symptoms on the home page!</p>
+    {% endif %}
+
+    <a href="/">🏠 Back to Home</a>
+</div>
+</body>
+</html>
